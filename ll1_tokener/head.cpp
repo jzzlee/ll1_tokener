@@ -1,5 +1,5 @@
 #include "head.h"
-#include<cassert>
+#include <cassert>
 #include <iostream>
 
 
