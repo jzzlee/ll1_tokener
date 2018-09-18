@@ -1,14 +1,17 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <ostream>
 
 
 class Token {
 public:
+	Token() = default;
 	Token(int type, const std::string &text);
 	std::string toString() const;
 	int getType() const { return type; }
 	const std::string &getText() const { return text; }
+
 
 private:
 	int type;
@@ -22,6 +25,7 @@ public:
 	void consume();
 	void match(char x);
 	virtual Token nextToken() = 0;
+	virtual ~Lexer();
 
 protected:
 	std::string input;
@@ -49,4 +53,32 @@ public:
 	static const int LBRACK;
 	static const int RBRACK;
 	static const std::vector<std::string> tokenNames;
+};
+
+
+class Parser {
+public:
+	Parser(Lexer &input);
+	virtual ~Parser();
+	virtual void element() = 0;
+	virtual void elements() = 0;
+	virtual void list() = 0;
+	virtual void match(int x) = 0;
+	virtual void consume() = 0;
+
+protected:
+	Lexer &input;
+	Token lookahead;
+};
+
+
+class ListParser : public Parser {
+public:
+	ListParser(Lexer &input);
+
+	void element() override;
+	void elements() override;
+	void list() override;
+	void match(int x) override;
+	void consume() override;
 };
