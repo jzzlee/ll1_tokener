@@ -33,6 +33,13 @@ void Lexer::consume()
 		c = LEOF;
 }
 
+void Lexer::reset()
+{
+	p = 0;
+	c = input[p];
+}
+
+
 void Lexer::match(char x)
 {
 	assert(c == x);
@@ -46,7 +53,8 @@ const int ListLexer::NAME = 2;
 const int ListLexer::COMMA = 3;
 const int ListLexer::LBRACK = 4;
 const int ListLexer::RBRACK = 5;
-const std::vector<std::string> ListLexer::tokenNames = { "n/a", "<EOF>", "NAME", "COMMA", "LBRACK", "RBRACK" };
+const int ListLexer::EQUALS = 6;
+const std::vector<std::string> ListLexer::tokenNames = { "n/a", "<EOF>", "NAME", "COMMA", "LBRACK", "RBRACK", "EQUIALS" };
 
 ListLexer::ListLexer(const std::string &input) :
 	Lexer(input) {}
@@ -105,6 +113,9 @@ Token ListLexer::nextToken()
 		case ']':
 			consume();
 			return Token(RBRACK, "]");
+		case '=':
+			consume();
+			return Token(EQUALS, "=");
 		default:
 			if (isLetter())
 				return Name();
@@ -123,7 +134,11 @@ Parser::~Parser() { }
 
 ListParser::ListParser(Lexer &input):
 	Parser(input) {
-	consume(); 
+}
+
+void ListParser::init()
+{
+	consume();
 }
 
 void ListParser::element()
@@ -179,3 +194,78 @@ void ListParser::consume()
 	std::cout << lookahead.toString() << std::endl;
 }
 
+
+ListLLKParser::ListLLKParser(Lexer &lexer, const size_t n) :
+	ListParser(lexer), length(n)
+{
+	buff.resize(n);
+}
+
+void ListLLKParser::init()
+{
+	for (auto &c : buff)
+		c = input.nextToken();
+}
+
+
+Token ListLLKParser::LT(int i) const
+{
+	return buff[(p + i - 1) % length];
+}
+
+int ListLLKParser::LA(int i) const
+{
+	return LT(i).getType();
+}
+
+void ListLLKParser::consume()
+{
+	buff[p] = input.nextToken();
+	p = (p + 1) % length;
+}
+
+void ListLLKParser::match(int x)
+{
+	if (LA(1) == x)
+	{
+		consume();
+	}
+	else
+	{
+		std::cout << "can not match " << LA(1) << " with type " << x << std::endl;
+	}
+}
+
+void ListLLKParser::element()
+{
+	auto ahead1 = LA(1);
+	auto ahead2 = LA(2);
+	if (ahead1 == ListLexer::NAME && ahead2 == ListLexer::EQUALS)
+	{
+		match(ListLexer::NAME);
+		match(ListLexer::EQUALS);
+		match(ListLexer::NAME);
+	}
+	else if (ahead1 == ListLexer::NAME)
+	{
+		match(ListLexer::NAME);
+	}
+	else if (ahead1 == ListLexer::LBRACK)
+	{
+		list();
+	}
+	else
+	{
+		std::cout << "ListLLKParser get noknown element: " << ahead1 << std::endl;
+	}
+}
+
+void ListLLKParser::elements()
+{
+	element();
+	while (LA(1) == ListLexer::COMMA) {
+		match(ListLexer::COMMA);
+		element();
+
+	}
+}

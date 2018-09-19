@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <ostream>
+#include <vector>
 
 
 class Token {
@@ -25,6 +26,7 @@ public:
 	void consume();
 	void match(char x);
 	virtual Token nextToken() = 0;
+	virtual void reset();
 	virtual ~Lexer();
 
 protected:
@@ -52,6 +54,7 @@ public:
 	static const int COMMA;
 	static const int LBRACK;
 	static const int RBRACK;
+	static const int EQUALS;
 	static const std::vector<std::string> tokenNames;
 };
 
@@ -60,6 +63,8 @@ class Parser {
 public:
 	Parser(Lexer &input);
 	virtual ~Parser();
+
+	virtual void init() = 0;
 	virtual void element() = 0;
 	virtual void elements() = 0;
 	virtual void list() = 0;
@@ -76,9 +81,29 @@ class ListParser : public Parser {
 public:
 	ListParser(Lexer &input);
 
+	void init() override;
 	void element() override;
 	void elements() override;
 	void list() override;
 	void match(int x) override;
 	void consume() override;
+};
+
+class ListLLKParser : public ListParser {
+public:
+	ListLLKParser(Lexer &lexer, const size_t n);
+
+	Token LT(int i) const;
+	int LA(int i) const;
+
+	void init() override;
+	void element() override;
+	void elements() override;
+	void match(int x) override;
+	void consume() override;
+
+private:
+	const size_t length;
+	std::vector<Token> buff;
+	int p = 0;
 };

@@ -7,7 +7,8 @@ int main()
 {
 	std::string s;
 	std::cout << "enter a line of code:";
-	std::getline(std::cin, s);
+	//std::getline(std::cin, s);
+	s = "[a, b=c, [d, e]]";
 
 
 	auto lexer = ListLexer(s);
@@ -20,7 +21,8 @@ int main()
 	//}
 	//std::cout << t.toString() << std::endl;
 
-	auto parser = ListParser(lexer);
+	auto parser = ListLLKParser(lexer, 2);
+	parser.init();
 	parser.list();
 
 	system("pause");
